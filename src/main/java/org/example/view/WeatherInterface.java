@@ -10,16 +10,18 @@ import java.util.Scanner;
 
 public class WeatherInterface {
     private Scanner scanner;
+    private WeatherStorage weatherStorage;
+    private DataBaseTableViewer dataBaseTableViewer;
 
     public WeatherInterface() {
         this.scanner = new Scanner(System.in);
+        this.weatherStorage = new WeatherDataBase();
+        this.dataBaseTableViewer = new DataBaseTableViewer();
     }
 
     public void run(String path) throws SQLException {
-        WeatherStorage weatherStorage = new WeatherDataBase();
-        Connection connection = weatherStorage.connect(path);
+        Connection connection = getWeatherStorage().connect(path);
         Statement statement = connection.createStatement();
-        DataBaseTableViewer dataBaseTableViewer = new DataBaseTableViewer();
 
         while (true) {
             System.out.println();
@@ -45,37 +47,37 @@ public class WeatherInterface {
                     switch (islandNumber) {
                         case 1:
                             System.out.println("Showing the table:");
-                            dataBaseTableViewer.dataTableViewer(statement, "Tenerife");
+                            getDataBaseTableViewer().dataTableViewer(statement, "Tenerife");
                             System.out.println();
                             break;
                         case 2:
                             System.out.println("Showing the table:");
-                            dataBaseTableViewer.dataTableViewer(statement, "GranCanaria");
+                            getDataBaseTableViewer().dataTableViewer(statement, "GranCanaria");
                             System.out.println();
                             break;
                         case 3:
                             System.out.println("Showing the table:");
-                            dataBaseTableViewer.dataTableViewer(statement, "Lanzarote");
+                            getDataBaseTableViewer().dataTableViewer(statement, "Lanzarote");
                             System.out.println();
                             break;
                         case 4:
                             System.out.println("Showing the table:");
-                            dataBaseTableViewer.dataTableViewer(statement, "Fuerteventura");
+                            getDataBaseTableViewer().dataTableViewer(statement, "Fuerteventura");
                             System.out.println();
                             break;
                         case 5:
                             System.out.println("Showing the table:");
-                            dataBaseTableViewer.dataTableViewer(statement, "LaPalma");
+                            getDataBaseTableViewer().dataTableViewer(statement, "LaPalma");
                             System.out.println();
                             break;
                         case 6:
                             System.out.println("Showing the table:");
-                            dataBaseTableViewer.dataTableViewer(statement, "ElHierro");
+                            getDataBaseTableViewer().dataTableViewer(statement, "ElHierro");
                             System.out.println();
                             break;
                         case 7:
                             System.out.println("Showing the table:");
-                            dataBaseTableViewer.dataTableViewer(statement, "LaGomera");
+                            getDataBaseTableViewer().dataTableViewer(statement, "LaGomera");
                             break;
                         case 8:
                             System.out.println("Going back-");
@@ -104,5 +106,12 @@ public class WeatherInterface {
         }
     }
 
+    public WeatherStorage getWeatherStorage() {
+        return weatherStorage;
+    }
+
+    public DataBaseTableViewer getDataBaseTableViewer() {
+        return dataBaseTableViewer;
+    }
 }
 

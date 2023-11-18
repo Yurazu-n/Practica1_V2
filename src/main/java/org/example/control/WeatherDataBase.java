@@ -52,7 +52,6 @@ public class WeatherDataBase implements WeatherStorage {
                 "'" + weather.getLocation().getIslandName() + "'," +
                 "'" + weather.getInstant() + "');"
         );
-        System.out.println("New entrance inserted into " + weather.getLocation().getIslandName() + " table");
     }
 
     @Override
@@ -69,6 +68,5 @@ public class WeatherDataBase implements WeatherStorage {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Table " + weather.getLocation().getIslandName() + " updated");
     }
 }

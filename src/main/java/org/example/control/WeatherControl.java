@@ -1,16 +1,12 @@
 package org.example.control;
 
-import org.example.model.Location;
-import org.example.model.Weather;
-import org.example.model.WeatherProvider;
-import org.example.model.WeatherStorage;
+import org.example.model.*;
+import org.example.view.WeatherInterface;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 public class WeatherControl {
     private List<Location> locations = new ArrayList<>(List.of(
@@ -25,32 +21,47 @@ public class WeatherControl {
     private WeatherStorage weatherStorage;
     private WeatherProvider weatherProvider;
 
+    private WeatherInterface weatherInterface;
+
     public WeatherControl() {
         this.weatherProvider = new WeatherSource();
         this.weatherStorage = new WeatherDataBase();
+        this.weatherInterface = new WeatherInterface();
     }
 
     public void execute(String path, String apiKey) throws SQLException {
-        System.out.println("Starting the execution");
+        CountDownLatch tablesCreated = new CountDownLatch(1);
+
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Connection connection = getWeatherStorage().connect(path);
         Statement statement = connection.createStatement();
         for (int i = 0; i < 7; i++) {
             getWeatherStorage().createTable(statement, getLocations().get(i).getIslandName());
         }
-        for (Location location : getLocations()) {
-            List<Weather> weathers = getWeatherProvider().getWeather(location, apiKey);
-            for (Weather weather : weathers) {
-                String query = "SELECT COUNT(*) FROM " + location.getIslandName()
-                        + " WHERE instant ='" + weather.getInstant() + "';";
-                ResultSet resultSet = statement.executeQuery(query);
-                if (resultSet.getInt(1) > 0){
-                    getWeatherStorage().update(statement, weather);
+
+        Runnable updateTask = () -> {
+            try {
+                for (Location location : getLocations()) {
+                    List<Weather> weathers = getWeatherProvider().getWeather(location, apiKey);
+                    for (Weather weather : weathers) {
+                        String query = "SELECT COUNT(*) FROM " + location.getIslandName()
+                                + " WHERE instant ='" + weather.getInstant() + "';";
+                        ResultSet resultSet = statement.executeQuery(query);
+                        if (resultSet.getInt(1) > 0) {
+                            getWeatherStorage().update(statement, weather);
+                        } else {
+                            getWeatherStorage().insert(statement, weather);
+                        }
+                    }
                 }
-                else {
-                    getWeatherStorage().insert(statement, weather);
-                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
+            System.out.println("The tables have been updated.");
+        };
+
+        scheduler.scheduleAtFixedRate(updateTask, 0, 6, TimeUnit.HOURS);
+        getWeatherInterface().run(path);
     }
 
     public List<Location> getLocations() {
@@ -65,4 +76,7 @@ public class WeatherControl {
         return weatherProvider;
     }
 
+    public WeatherInterface getWeatherInterface() {
+        return weatherInterface;
+    }
 }
