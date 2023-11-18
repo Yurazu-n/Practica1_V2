@@ -4,6 +4,7 @@ import com.google.gson.*;
 import okhttp3.*;
 import org.example.model.Location;
 import org.example.model.Weather;
+import org.example.model.WeatherProvider;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -11,11 +12,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WeatherSource {
+public class WeatherSource implements WeatherProvider {
 
     public WeatherSource() {
     }
 
+    @Override
     public List<Weather> getWeather(Location location, String apiKey) {
         List<Weather> weathers = new ArrayList<>();
         OkHttpClient client = new OkHttpClient();

@@ -1,17 +1,19 @@
 package org.example.control;
 
 import org.example.model.Weather;
+import org.example.model.WeatherStorage;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class WeatherDataBase {
+public class WeatherDataBase implements WeatherStorage {
 
     public WeatherDataBase() {
     }
 
+    @Override
     public Connection connect(String path) {
         Connection conn = null;
         try {
@@ -25,6 +27,7 @@ public class WeatherDataBase {
         return conn;
     }
 
+    @Override
     public void createTable(Statement statement, String islandName) throws SQLException {
         statement.execute("CREATE TABLE IF NOT EXISTS " + islandName + "(" +
                 "temperature REAL,\n" +
@@ -37,7 +40,7 @@ public class WeatherDataBase {
         );
     }
 
-
+    @Override
     public void insert(Statement statement, Weather weather) throws SQLException {
         statement.execute("INSERT INTO " + weather.getLocation().getIslandName() +
                 " (temperature, humidity, windSpeed, clouds, precipitationProb, location, instant)\n" +
@@ -52,6 +55,7 @@ public class WeatherDataBase {
         System.out.println("New entrance inserted into " + weather.getLocation().getIslandName() + " table");
     }
 
+    @Override
     public void update(Statement statement, Weather weather) {
         try {
             statement.execute("UPDATE " + weather.getLocation().getIslandName() +
