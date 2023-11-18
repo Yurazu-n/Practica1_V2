@@ -57,7 +57,6 @@ public class WeatherControl {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-            System.out.println("The tables have been updated.");
         };
 
         scheduler.scheduleAtFixedRate(updateTask, 0, 6, TimeUnit.HOURS);
