@@ -29,15 +29,9 @@ public class WeatherControl {
         this.weatherInterface = new WeatherInterface();
     }
 
-    public void execute(String path, String apiKey) throws SQLException {
-        CountDownLatch tablesCreated = new CountDownLatch(1);
-
+    public void execute(String path, String apiKey) throws MyExecutionException {
+        Statement statement = dataBaseConnector(getWeatherStorage(), getLocations(), path);
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        Connection connection = getWeatherStorage().connect(path);
-        Statement statement = connection.createStatement();
-        for (int i = 0; i < 7; i++) {
-            getWeatherStorage().createTable(statement, getLocations().get(i).getIslandName());
-        }
 
         Runnable updateTask = () -> {
             try {
@@ -62,6 +56,22 @@ public class WeatherControl {
         scheduler.scheduleAtFixedRate(updateTask, 0, 6, TimeUnit.HOURS);
         getWeatherInterface().run(path);
     }
+
+
+    private static Statement dataBaseConnector(WeatherStorage weatherStorage, List<Location> locations, String path) throws MyExecutionException {
+        Statement statement = null;
+        try {
+            Connection connection = weatherStorage.connect(path);
+            statement = connection.createStatement();
+            for (int i = 0; i < 7; i++) {
+                weatherStorage.createTable(statement, locations.get(i).getIslandName());
+            }
+        } catch (SQLException e) {
+            throw new MyExecutionException("Execution Error");
+        }
+        return statement;
+    }
+
 
     public List<Location> getLocations() {
         return locations;

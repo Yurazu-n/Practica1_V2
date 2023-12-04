@@ -1,5 +1,6 @@
 package org.example.view;
 
+import org.example.control.MyExecutionException;
 import org.example.control.WeatherDataBase;
 import org.example.model.WeatherStorage;
 
@@ -19,81 +20,85 @@ public class WeatherInterface {
         this.dataBaseTableViewer = new DataBaseTableViewer();
     }
 
-    public void run(String path) throws SQLException {
-        Connection connection = getWeatherStorage().connect(path);
-        Statement statement = connection.createStatement();
+    public void run(String path) throws MyExecutionException {
+        try {
+            Connection connection = getWeatherStorage().connect(path);
+            Statement statement = connection.createStatement();
 
-        while (true) {
-            System.out.println();
-            System.out.println("1. Get an Island climatic information");
-            System.out.println("2. Exit");
-            System.out.println();
+            while (true) {
+                System.out.println();
+                System.out.println("1. Get an Island climatic information");
+                System.out.println("2. Exit");
+                System.out.println();
 
-            int choice = getUserChoice();
+                int choice = getUserChoice();
 
-            switch (choice) {
-                case 1:
-                    System.out.println("1. Tenerife");
-                    System.out.println("2. Gran Canaria");
-                    System.out.println("3. Lanzarote");
-                    System.out.println("4. Fuerteventura");
-                    System.out.println("5. La Palma");
-                    System.out.println("6. El Hierro");
-                    System.out.println("7. La Gomera");
-                    System.out.println("8. Go Back");
-                    System.out.println();
+                switch (choice) {
+                    case 1:
+                        System.out.println("1. Tenerife");
+                        System.out.println("2. Gran Canaria");
+                        System.out.println("3. Lanzarote");
+                        System.out.println("4. Fuerteventura");
+                        System.out.println("5. La Palma");
+                        System.out.println("6. El Hierro");
+                        System.out.println("7. La Gomera");
+                        System.out.println("8. Go Back");
+                        System.out.println();
 
-                    int islandNumber = getUserChoice();
-                    switch (islandNumber) {
-                        case 1:
-                            System.out.println("Showing the table:");
-                            getDataBaseTableViewer().dataTableViewer(statement, "Tenerife");
-                            System.out.println();
-                            break;
-                        case 2:
-                            System.out.println("Showing the table:");
-                            getDataBaseTableViewer().dataTableViewer(statement, "GranCanaria");
-                            System.out.println();
-                            break;
-                        case 3:
-                            System.out.println("Showing the table:");
-                            getDataBaseTableViewer().dataTableViewer(statement, "Lanzarote");
-                            System.out.println();
-                            break;
-                        case 4:
-                            System.out.println("Showing the table:");
-                            getDataBaseTableViewer().dataTableViewer(statement, "Fuerteventura");
-                            System.out.println();
-                            break;
-                        case 5:
-                            System.out.println("Showing the table:");
-                            getDataBaseTableViewer().dataTableViewer(statement, "LaPalma");
-                            System.out.println();
-                            break;
-                        case 6:
-                            System.out.println("Showing the table:");
-                            getDataBaseTableViewer().dataTableViewer(statement, "ElHierro");
-                            System.out.println();
-                            break;
-                        case 7:
-                            System.out.println("Showing the table:");
-                            getDataBaseTableViewer().dataTableViewer(statement, "LaGomera");
-                            break;
-                        case 8:
-                            System.out.println("Going back-");
-                            break;
-                        default:
-                            System.out.println("Not valid option, going back-");
-                            break;
-                    }
-                    break;
-                case 2:
-                    System.out.println("Exiting...");
-                    System.exit(0);
-                    break;
-                default:
-                    System.out.println("Not valid option, try again");
+                        int islandNumber = getUserChoice();
+                        switch (islandNumber) {
+                            case 1:
+                                System.out.println("Showing the table:");
+                                getDataBaseTableViewer().dataTableViewer(statement, "Tenerife");
+                                System.out.println();
+                                break;
+                            case 2:
+                                System.out.println("Showing the table:");
+                                getDataBaseTableViewer().dataTableViewer(statement, "GranCanaria");
+                                System.out.println();
+                                break;
+                            case 3:
+                                System.out.println("Showing the table:");
+                                getDataBaseTableViewer().dataTableViewer(statement, "Lanzarote");
+                                System.out.println();
+                                break;
+                            case 4:
+                                System.out.println("Showing the table:");
+                                getDataBaseTableViewer().dataTableViewer(statement, "Fuerteventura");
+                                System.out.println();
+                                break;
+                            case 5:
+                                System.out.println("Showing the table:");
+                                getDataBaseTableViewer().dataTableViewer(statement, "LaPalma");
+                                System.out.println();
+                                break;
+                            case 6:
+                                System.out.println("Showing the table:");
+                                getDataBaseTableViewer().dataTableViewer(statement, "ElHierro");
+                                System.out.println();
+                                break;
+                            case 7:
+                                System.out.println("Showing the table:");
+                                getDataBaseTableViewer().dataTableViewer(statement, "LaGomera");
+                                break;
+                            case 8:
+                                System.out.println("Going back-");
+                                break;
+                            default:
+                                System.out.println("Not valid option, going back-");
+                                break;
+                        }
+                        break;
+                    case 2:
+                        System.out.println("Exiting...");
+                        System.exit(0);
+                        break;
+                    default:
+                        System.out.println("Not valid option, try again");
+                }
             }
+        } catch (SQLException e) {
+            throw new MyExecutionException("Execution Error");
         }
     }
 
