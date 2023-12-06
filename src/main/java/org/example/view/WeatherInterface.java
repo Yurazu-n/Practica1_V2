@@ -113,10 +113,6 @@ public class WeatherInterface {
         }
     }
 
-    public WeatherStorage getWeatherStorage() {
-        return weatherStorage;
-    }
-
     public DataBaseTableViewer getDataBaseTableViewer() {
         return dataBaseTableViewer;
     }

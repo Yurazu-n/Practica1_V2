@@ -3,7 +3,6 @@ package org.example.control;
 import org.example.model.*;
 import org.example.view.WeatherInterface;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -18,42 +17,39 @@ public class WeatherControl {
             new Location(27.80628, -17.915779, "ElHierro"),
             new Location(28.091631, -17.11331, "LaGomera")));
 
-    private final WeatherStorage weatherStorage;
     private final WeatherProvider weatherProvider;
-
     private final WeatherInterface weatherInterface;
+    private final PredictionPublisher eventPublisher;
 
     public WeatherControl() {
-        this.weatherProvider = new WeatherSource();
-        this.weatherStorage = new WeatherDataBase();
+        this.weatherProvider = new WeatherPredictor();
         this.weatherInterface = new WeatherInterface();
+        this.eventPublisher = new PredictionPublisher();
     }
 
-    public void execute(String path, String apiKey) throws MyExecutionException {
+    public void execute(String apiKey) throws MyExecutionException {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
         Runnable updateTask = () -> {
             try {
-                getWeatherStorage().save(path,
-                        getLocations(),
-                        getWeatherProvider(),
-                        apiKey);
-                } catch (Exception e) {
+                for (Location location : getLocations()) {
+                    List<Weather> weathers = getWeatherProvider().getWeather(location, apiKey);
+                    for (Weather weather : weathers){
+                        getEventPublisher().publishEvent(weather);
+                    }
+                }
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         };
 
         scheduler.scheduleAtFixedRate(updateTask, 0, 6, TimeUnit.HOURS);
-        getWeatherInterface().run(path);
+        //getWeatherInterface().run(path);
     }
 
 
     public List<Location> getLocations() {
         return locations;
-    }
-
-    public WeatherStorage getWeatherStorage() {
-        return weatherStorage;
     }
 
     public WeatherProvider getWeatherProvider() {
@@ -62,5 +58,9 @@ public class WeatherControl {
 
     public WeatherInterface getWeatherInterface() {
         return weatherInterface;
+    }
+
+    public PredictionPublisher getEventPublisher() {
+        return eventPublisher;
     }
 }

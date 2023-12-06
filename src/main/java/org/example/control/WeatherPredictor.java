@@ -2,27 +2,29 @@ package org.example.control;
 
 import com.google.gson.*;
 import okhttp3.*;
+import org.example.model.Event;
 import org.example.model.Location;
 import org.example.model.Weather;
 import org.example.model.WeatherProvider;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.List;
 
-public class WeatherSource implements WeatherProvider {
+public class WeatherPredictor implements WeatherProvider {
 
-    public WeatherSource() {
+    public WeatherPredictor() {
     }
 
     @Override
     public List<Weather> getWeather(Location location, String apiKey) throws MyExecutionException {
         OkHttpClient client = new OkHttpClient();
         String url = "http://api.openweathermap.org/data/2.5/forecast?lat=" + location.getLat() + "&lon=" +
-                location.getLon() + "&appid=" + apiKey;
+                location.getLon() + "&units=metric" + "&appid=" + apiKey;
         Request request = new Request.Builder().url(url).build();
         try {
             ResponseBody responseBody = client.newCall(request).execute().body();
@@ -52,11 +54,12 @@ public class WeatherSource implements WeatherProvider {
         return filteredEntries;
     }
 
-    private static List<Weather> weatherListContructor(JsonArray filteredEntries, DateTimeFormatter formatter,
-                                                       Location location) {
+    private static List<Weather> weatherListContructor(JsonArray filteredEntries, DateTimeFormatter formatter, Location location) {
         List<Weather> weathers = new ArrayList<>();
         for (JsonElement element : filteredEntries) {
             JsonObject listElement = element.getAsJsonObject();
+            Instant instant = LocalDateTime.parse(listElement.get("dt_txt").getAsString(), formatter).toInstant(ZoneOffset.UTC);
+            String predictionInstant = DateTimeFormatter.ISO_INSTANT.format(instant);
 
             weathers.add(new Weather(
                     listElement.getAsJsonObject("main").get("temp").getAsDouble(),
@@ -64,9 +67,9 @@ public class WeatherSource implements WeatherProvider {
                     listElement.getAsJsonObject("wind").get("speed").getAsDouble(),
                     listElement.getAsJsonObject("clouds").get("all").getAsInt(),
                     listElement.get("pop").getAsInt(),
-                    location,
-                    LocalDateTime.parse(listElement.get("dt_txt").getAsString(), formatter).toLocalDate().toString()
-            ));
+                    new Event(DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+                            "prediction-provider", predictionInstant, location))
+            );
         }
        return weathers;
     }

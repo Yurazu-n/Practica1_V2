@@ -7,18 +7,17 @@ public class Weather {
     private double windSpeed;
     private int clouds;
     private double precipitationProb;
-    private Location location;
-    private String instant;
+    private Event event;
+
 
     public Weather(double temp, int humidity, double windSpeed, int clouds,
-                   double precipitationProb,Location location, String instant) {
+                   double precipitationProb, Event event) {
         this.temp = temp;
         this.humidity = humidity;
         this.windSpeed = windSpeed;
         this.clouds = clouds;
         this.precipitationProb = precipitationProb;
-        this.location = location;
-        this.instant = instant;
+        this.event = event;
     }
 
     public double getTemp() {
@@ -41,11 +40,7 @@ public class Weather {
         return precipitationProb;
     }
 
-    public Location getLocation() {
-        return location;
-    }
-
-    public String getInstant() {
-        return instant;
+    public Event getEvent() {
+        return event;
     }
 }
