@@ -30,46 +30,21 @@ public class WeatherControl {
     }
 
     public void execute(String path, String apiKey) throws MyExecutionException {
-        Statement statement = dataBaseConnector(getWeatherStorage(), getLocations(), path);
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
         Runnable updateTask = () -> {
             try {
-                for (Location location : getLocations()) {
-                    List<Weather> weathers = getWeatherProvider().getWeather(location, apiKey);
-                    for (Weather weather : weathers) {
-                        String query = "SELECT COUNT(*) FROM " + location.getIslandName()
-                                + " WHERE instant ='" + weather.getInstant() + "';";
-                        ResultSet resultSet = statement.executeQuery(query);
-                        if (resultSet.getInt(1) > 0) {
-                            getWeatherStorage().update(statement, weather);
-                        } else {
-                            getWeatherStorage().insert(statement, weather);
-                        }
-                    }
-                }
-            } catch (SQLException e) {
+                getWeatherStorage().save(path,
+                        getLocations(),
+                        getWeatherProvider(),
+                        apiKey);
+                } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         };
 
         scheduler.scheduleAtFixedRate(updateTask, 0, 6, TimeUnit.HOURS);
         getWeatherInterface().run(path);
-    }
-
-
-    private static Statement dataBaseConnector(WeatherStorage weatherStorage, List<Location> locations, String path) throws MyExecutionException {
-        Statement statement = null;
-        try {
-            Connection connection = weatherStorage.connect(path);
-            statement = connection.createStatement();
-            for (int i = 0; i < 7; i++) {
-                weatherStorage.createTable(statement, locations.get(i).getIslandName());
-            }
-        } catch (SQLException e) {
-            throw new MyExecutionException("Execution Error");
-        }
-        return statement;
     }
 
 

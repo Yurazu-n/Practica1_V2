@@ -5,6 +5,7 @@ import org.example.control.WeatherDataBase;
 import org.example.model.WeatherStorage;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
@@ -22,7 +23,8 @@ public class WeatherInterface {
 
     public void run(String path) throws MyExecutionException {
         try {
-            Connection connection = getWeatherStorage().connect(path);
+            String url = "jdbc:sqlite:" + path + "/IslandDataBase.db";
+            Connection connection = DriverManager.getConnection(url);
             Statement statement = connection.createStatement();
 
             while (true) {

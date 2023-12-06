@@ -19,27 +19,22 @@ public class WeatherSource implements WeatherProvider {
     }
 
     @Override
-    public List<Weather> getWeather(Location location, String apiKey) {
-        List<Weather> weathers = null;
+    public List<Weather> getWeather(Location location, String apiKey) throws MyExecutionException {
         OkHttpClient client = new OkHttpClient();
         String url = "http://api.openweathermap.org/data/2.5/forecast?lat=" + location.getLat() + "&lon=" +
                 location.getLon() + "&appid=" + apiKey;
         Request request = new Request.Builder().url(url).build();
         try {
-            Response response = client.newCall(request).execute();
-            ResponseBody responseBody = response.body();
+            ResponseBody responseBody = client.newCall(request).execute().body();
             String responseString = responseBody.string();
 
             JsonArray filteredEntries = predictionFilter(responseString);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            weathers = weatherListContructor(filteredEntries, formatter, location);
-
+            return weatherListContructor(filteredEntries, formatter, location);
 
         } catch (IOException e) {
-            System.out.println("Connection failed");
-            throw new RuntimeException(e);
+            throw new MyExecutionException("Execution Error");
         }
-        return weathers;
     }
 
     private static JsonArray predictionFilter(String response) {

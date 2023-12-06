@@ -1,12 +1,12 @@
 package org.example.control;
 
+import org.example.model.Location;
 import org.example.model.Weather;
+import org.example.model.WeatherProvider;
 import org.example.model.WeatherStorage;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.List;
 
 public class WeatherDataBase implements WeatherStorage {
 
@@ -14,48 +14,76 @@ public class WeatherDataBase implements WeatherStorage {
     }
 
     @Override
-    public Connection connect(String path) {
-        Connection conn = null;
+    public void save(String path, List<Location> locations, WeatherProvider weatherProvider, String apikey) throws MyExecutionException {
+        Statement statement = dataBaseCreator(locations, path);
+
+        for (Location location : locations) {
+            List<Weather> weathers = weatherProvider.getWeather(location, apikey);
+            for (Weather weather : weathers) {
+                String query = "SELECT COUNT(*) FROM " + location.getIslandName()
+                        + " WHERE instant ='" + weather.getInstant() + "';";
+                try {
+                    ResultSet resultSet = statement.executeQuery(query);
+                    if (resultSet.getInt(1) > 0) {
+                        update(statement, weather);
+                    } else {
+                        insert(statement, weather);
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    private static Statement dataBaseCreator(List<Location> locations, String path) throws MyExecutionException {
+        Statement statement = null;
         try {
             String url = "jdbc:sqlite:" + path + "/IslandDataBase.db";
-            conn = DriverManager.getConnection(url);
-            System.out.println("Connection to SQLite has been established.");
-            return conn;
+            statement = DriverManager.getConnection(url).createStatement();
+            for (int i = 0; i < 7; i++) {
+                createTable(statement, locations.get(i).getIslandName());
+            }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            throw new MyExecutionException("Execution Error");
         }
-        return conn;
+        return statement;
     }
 
-    @Override
-    public void createTable(Statement statement, String islandName) throws SQLException {
-        statement.execute("CREATE TABLE IF NOT EXISTS " + islandName + "(" +
-                "temperature REAL,\n" +
-                "humidity INTEGER,\n" +
-                "windSpeed REAL,\n" +
-                "clouds INTEGER,\n" +
-                "precipitationProb REAL,\n" +
-                "location TEXT,\n" +
-                "instant TEXT)"
-        );
+    private static void createTable(Statement statement, String islandName) throws MyExecutionException {
+        try {
+            statement.execute("CREATE TABLE IF NOT EXISTS " + islandName + "(" +
+                    "temperature REAL,\n" +
+                    "humidity INTEGER,\n" +
+                    "windSpeed REAL,\n" +
+                    "clouds INTEGER,\n" +
+                    "precipitationProb REAL,\n" +
+                    "location TEXT,\n" +
+                    "instant TEXT)"
+            );
+        } catch (SQLException e) {
+            throw new MyExecutionException("Execution Error");
+        }
     }
 
-    @Override
-    public void insert(Statement statement, Weather weather) throws SQLException {
-        statement.execute("INSERT INTO " + weather.getLocation().getIslandName() +
-                " (temperature, humidity, windSpeed, clouds, precipitationProb, location, instant)\n" +
-                "VALUES(" + weather.getTemp() + "," +
-                weather.getHumidity() + "," +
-                weather.getWindSpeed() + "," +
-                weather.getClouds() + "," +
-                weather.getPrecipitationProb() + "," +
-                "'" + weather.getLocation().getIslandName() + "'," +
-                "'" + weather.getInstant() + "');"
-        );
+    private static void insert(Statement statement, Weather weather) throws MyExecutionException {
+        try {
+            statement.execute("INSERT INTO " + weather.getLocation().getIslandName() +
+                    " (temperature, humidity, windSpeed, clouds, precipitationProb, location, instant)\n" +
+                    "VALUES(" + weather.getTemp() + "," +
+                    weather.getHumidity() + "," +
+                    weather.getWindSpeed() + "," +
+                    weather.getClouds() + "," +
+                    weather.getPrecipitationProb() + "," +
+                    "'" + weather.getLocation().getIslandName() + "'," +
+                    "'" + weather.getInstant() + "');"
+            );
+        } catch (SQLException e) {
+            throw new MyExecutionException("Execution Error");
+        }
     }
 
-    @Override
-    public void update(Statement statement, Weather weather) {
+    private static void update(Statement statement, Weather weather) throws MyExecutionException {
         try {
             statement.execute("UPDATE " + weather.getLocation().getIslandName() +
                     " SET temperature = " + weather.getTemp() +
@@ -66,7 +94,7 @@ public class WeatherDataBase implements WeatherStorage {
                     ", location = '" + weather.getLocation().getIslandName() + "'" +
                     " WHERE instant = '" + weather.getInstant() + "';");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new MyExecutionException("Execution Error");
         }
     }
 }
